@@ -14,7 +14,7 @@ env:
 
 jobs:
   build-and-push-image:
-    if: github.repository == 'restic/restic'
+    if: github.repository == 'kubestash/restic'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,11 +66,11 @@ jobs:
           push: true
           context: .
           file: docker/Dockerfile.release
-          platforms: linux/386,linux/amd64,linux/arm,linux/arm64
+          platforms: linux/amd64,linux/arm64
           pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-        
+
       - name: Output image
         id: image
         run: |
@@ -78,14 +78,14 @@ jobs:
           # available to the inputs of a reusable workflow call.
           image_name="${REGISTRY}/${IMAGE_NAME}"
           echo "image=$image_name" >> "$GITHUB_OUTPUT"
-        
+
   provenance:
     needs: [build-and-push-image]
     permissions:
       actions: read # for detecting the Github Actions environment.
       id-token: write # for creating OIDC tokens for signing.
       packages: write # for uploading attestations.
-    if: github.repository == 'restic/restic'
+    if: github.repository == 'kubestash/restic'
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
     with:
       image: ${{ needs.build-and-push-image.outputs.image }}
