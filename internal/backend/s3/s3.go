@@ -16,6 +16,7 @@ import (
 	"github.com/restic/restic/internal/backend"
 	"github.com/restic/restic/internal/backend/layout"
 	"github.com/restic/restic/internal/backend/location"
+	"github.com/restic/restic/internal/backend/retry"
 	"github.com/restic/restic/internal/backend/util"
 	"github.com/restic/restic/internal/debug"
 	"github.com/restic/restic/internal/errors"
@@ -66,14 +67,13 @@ func open(cfg Config, rt http.RoundTripper) (*Backend, error) {
 	if cfg.MaxRetries > 0 {
 		minio.MaxRetry = int(cfg.MaxRetries)
 	}
-
-	creds, err := getCredentials(cfg, rt)
-	if err != nil {
-		return nil, errors.Wrap(err, "s3.getCredentials")
-	}
+	try := retry.NewRetryConfig()
+	creds, err := try.RunWithRetry(context.Background(), func() (any, error) {
+		return getCredentials(cfg, rt)
+	})
 
 	options := &minio.Options{
-		Creds:     creds,
+		Creds:     creds.(*credentials.Credentials),
 		Secure:    !cfg.UseHTTP,
 		Region:    cfg.Region,
 		Transport: rt,
