@@ -21,6 +21,7 @@ type Config struct {
 	EndpointSuffix     string
 	Container          string
 	Prefix             string
+	EnableAzureProxy   bool
 
 	Connections uint   `option:"connections" help:"set a limit for the number of concurrent connections (default: 5)"`
 	AccessTier  string `option:"access-tier" help:"set the access tier for the blob storage (default: inferred from the storage account defaults)"`
@@ -83,5 +84,10 @@ func (cfg *Config) ApplyEnvironment(prefix string) {
 
 	if cfg.EndpointSuffix == "" {
 		cfg.EndpointSuffix = os.Getenv(prefix + "AZURE_ENDPOINT_SUFFIX")
+	}
+
+	enableAzureProxy, err := strconv.ParseBool(os.Getenv(prefix + "ENABLE_AZURE_PROXY"))
+	if err == nil {
+		cfg.EnableAzureProxy = enableAzureProxy
 	}
 }
