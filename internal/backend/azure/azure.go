@@ -9,6 +9,7 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -118,7 +119,7 @@ func open(cfg Config, rt http.RoundTripper) (*Backend, error) {
 				return nil, errors.Wrap(err, "NewAzureCLICredential")
 			}
 		} else {
-			if cfg.EnableAzureProxy {
+			if os.Getenv("AZURE_FEDERATED_TOKEN_FILE") != "" {
 				debug.Log(" - using WorkloadIdentityCredential")
 				cred, err = azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
 					EnableAzureProxy: true,
