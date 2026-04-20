@@ -9,6 +9,7 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -118,10 +119,20 @@ func open(cfg Config, rt http.RoundTripper) (*Backend, error) {
 				return nil, errors.Wrap(err, "NewAzureCLICredential")
 			}
 		} else {
-			debug.Log(" - using DefaultAzureCredential")
-			cred, err = azidentity.NewDefaultAzureCredential(nil)
-			if err != nil {
-				return nil, errors.Wrap(err, "NewDefaultAzureCredential")
+			if os.Getenv("AZURE_FEDERATED_TOKEN_FILE") != "" {
+				debug.Log(" - using WorkloadIdentityCredential")
+				cred, err = azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
+					EnableAzureProxy: true,
+				})
+				if err != nil {
+					return nil, errors.Wrap(err, "NewWorkloadIdentityCredential")
+				}
+			} else {
+				debug.Log(" - using DefaultAzureCredential")
+				cred, err = azidentity.NewDefaultAzureCredential(nil)
+				if err != nil {
+					return nil, errors.Wrap(err, "NewDefaultAzureCredential")
+				}
 			}
 		}
 
